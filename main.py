@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import (QPushButton, QLineEdit, QHBoxLayout, QTextEdit, QWidget, QVBoxLayout, QGridLayout,
-                             QGroupBox, QLabel, QApplication, QTabWidget)
+                             QGroupBox, QLabel, QApplication, QTabWidget, QFileDialog)
 from PyQt5.QtGui import QTextOption, QIntValidator
 from PyQt5.sip import *
 
@@ -21,6 +21,10 @@ class numEdit(QLineEdit):
 class mainui(QTabWidget):
     def __init__(self, parent=None):
         super(mainui, self).__init__(parent)
+        self.camera_name_edit = QLineEdit("")
+        self.camera_id_edit = QLineEdit("")
+        self.camera_path_edit = QLineEdit("")
+        self.camera_outputEdit = QTextEdit()
         self.lcmDesEdit = QTextEdit("")
         self.lcmScrEdit = QTextEdit("0x56,0x25,0x23,0x23,0x32,0x55,0x32")
         self.lcmScrEdit.setWordWrapMode(QTextOption.NoWrap)
@@ -120,35 +124,34 @@ class mainui(QTabWidget):
         CameraInfoGridGroupBox = QGroupBox("Camera info")
         cameraInfoLayout = QGridLayout()
         name_label = QLabel("camera name")
-        name_edit = QLineEdit("")
         id_label = QLabel("ID ")
-        id_edit = QLineEdit("")
         path_label = QLabel("path")
-        path_edit = QLineEdit("")
         cameraInfoLayout.setSpacing(10)
         cameraInfoLayout.addWidget(name_label, 1, 0)
-        cameraInfoLayout.addWidget(name_edit, 1, 1)
+        cameraInfoLayout.addWidget(self.camera_name_edit, 1, 1)
         cameraInfoLayout.addWidget(id_label, 2, 0)
-        cameraInfoLayout.addWidget(id_edit, 2, 1)
+        cameraInfoLayout.addWidget(self.camera_id_edit, 2, 1)
         cameraInfoLayout.addWidget(path_label, 3, 0)
-        cameraInfoLayout.addWidget(path_edit, 3, 1)
+        cameraInfoLayout.addWidget(self.camera_path_edit, 3, 1)
+        btn = QPushButton("...")
+        btn.clicked.connect(self.selectPath)
+        cameraInfoLayout.addWidget(btn, 3, 4)
         CameraInfoGridGroupBox.setLayout(cameraInfoLayout)
         mainLayout.addWidget(CameraInfoGridGroupBox)
         btn = QPushButton("Auto add ")
         mainLayout.addWidget(btn)
-        outputEdit = QTextEdit()
-        outputEdit.setEnabled(False)
-        mainLayout.addWidget(outputEdit)
+        self.camera_outputEdit.setEnabled(False)
+        mainLayout.addWidget(self.camera_outputEdit)
         self.cam_tab.setLayout(mainLayout)
         pass
 
     def calculation_fps(self):
         if self.pll_edit.getValue() and self.lane_edit.getValue() and self.high_edit.getValue() and self.width_edit and self.hsl_edit.getValue() and self.hbp_edit.getValue() and self.hfp_edit.getValue() and self.vbp_edit.getValue() and self.vfp_edit.getValue() and self.vsl_edit.getValue():
-            bit_ns = 1000 / self.pll_edit.getValue() / 2 / self.pll_edit.getValue()
+            bit_ns = 1000 / self.pll_edit.getValue() / 2 / self.lane_edit.getValue()
             lane_us = (
-                      self.hfp_edit.getValue() + self.hbp_edit.getValue() + self.hsl_edit.getValue() + self.width_edit.getValue()) * bit_ns * 24 / 1000
-            fps = 10000 / (lane_us * (
-            self.vfp_edit.getValue() + self.vbp_edit.getValue() + self.vsl_edit.getValue() + self.high_edit.getValue()))
+                          self.hfp_edit.getValue() + self.hbp_edit.getValue() + self.hsl_edit.getValue() + self.width_edit.getValue()) * bit_ns * 24 / 1000
+            fps = 1000000 / (lane_us * (
+                self.vfp_edit.getValue() + self.vbp_edit.getValue() + self.vsl_edit.getValue() + self.high_edit.getValue()))
             fps = round(fps, 2)
             self.fps_edit.setText(str(fps))
         pass
@@ -161,19 +164,22 @@ class mainui(QTabWidget):
             cmd = line[0]
             count = len(line)
             if cmd.find("0x") != -1:
-                des="{%s,%d,{" %(cmd,count-1)
-                for i in range(1,count):
-                    if i != count-1:
-                        des+="%s," %line[i]
+                des = "{%s,%d,{" % (cmd, count - 1)
+                for i in range(1, count):
+                    if i != count - 1:
+                        des += "%s," % line[i]
                     else:
-                        des+="%s" %line[i]
-                des+="}},"
+                        des += "%s" % line[i]
+                des += "}},"
                 self.lcmDesEdit.append(des)
             else:
                 self.lcmDesEdit.append("")
 
-    def checkLcmSrcCoreValid(self):
+    def selectPath(self):
+        path = QFileDialog.getExistingDirectory(self, "select path", "C:/")
+        self.camera_path_edit.setText(path)
         pass
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
