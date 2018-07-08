@@ -1,6 +1,7 @@
-from PyQt5.QtWidgets import *
-import threading, time
-from PyQt5.QtGui import *
+from PyQt5.QtWidgets import (QPushButton, QLineEdit, QHBoxLayout, QTextEdit, QWidget, QVBoxLayout, QGridLayout,
+                             QGroupBox, QLabel, QApplication, QTabWidget)
+from PyQt5.QtGui import QTextOption, QIntValidator
+from PyQt5.sip import *
 
 import sys
 
