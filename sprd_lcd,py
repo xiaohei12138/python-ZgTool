@@ -1,0 +1,108 @@
+from PyQt5.QtWidgets import (QPushButton, QLineEdit, QHBoxLayout, QTextEdit, QWidget, QVBoxLayout, QGridLayout,
+                             QGroupBox, QLabel, QApplication, QTabWidget, QFileDialog)
+from PyQt5.QtGui import QTextOption, QIntValidator
+from PyQt5.sip import *
+
+import sys
+
+
+class numEdit(QLineEdit):
+    def __init__(self, value=0):
+        super(numEdit, self).__init__(value)
+        self.setValidator(QIntValidator(0, 999))
+
+    def getValue(self):
+        try:
+            return int(self.text())
+        except:
+            return 0
+
+
+class mainui(QTabWidget):
+    def __init__(self, parent=None):
+        super(mainui, self).__init__(parent)
+        self.lcmDesEdit = QTextEdit("")
+        self.lcmDesEdit2 = QTextEdit("")
+        self.lcmScrEdit = QTextEdit("0x56,0x25,0x23,0x23,0x32,0x55,0x32")
+        self.lcmScrEdit.setWordWrapMode(QTextOption.NoWrap)
+        self.lcmDesEdit.setWordWrapMode(QTextOption.NoWrap)
+        self.lcmDesEdit2.setWordWrapMode(QTextOption.NoWrap)
+        self.width_edit = numEdit("480")
+        self.vbp_edit = numEdit("8")
+        self.vfp_edit = numEdit("8")
+        self.vsl_edit = numEdit("8")
+        self.high_edit = numEdit("960")
+        self.hbp_edit = numEdit("10")
+        self.hfp_edit = numEdit("10")
+        self.hsl_edit = numEdit("10")
+        self.lane_edit = numEdit("2")
+        self.pll_edit = numEdit("200")
+        self.fps_edit = numEdit("")
+        self.fps_edit.setEnabled(False)
+        self.lcm_tab = QWidget()
+        self.cam_tab = QWidget()
+        self.resize(800, 500)
+        self.addTab(self.lcm_tab, "lcm")
+        self.LcmUi()
+
+    def LcmUi(self):
+        mainLayout = QVBoxLayout()
+        lcmTimeLayout = QGridLayout()
+        lcmCorelayout = QHBoxLayout()
+        lcmTimeGridGroupBox = QGroupBox("lcm timing")
+        lcmCoreGridGroupBox = QGroupBox("lcm Core")
+
+        lcmCorelayout.addWidget(self.lcmScrEdit)
+        lcmCorelayout.addWidget(self.lcmDesEdit)
+        lcmCorelayout.addWidget(self.lcmDesEdit2)
+        lcmCoreGridGroupBox.setLayout(lcmCorelayout)
+
+        btn = QPushButton(" switch ")
+        btn.clicked.connect(self.lcmCoreSwitch)
+        mainLayout.addWidget(lcmTimeGridGroupBox)
+        mainLayout.addWidget(lcmCoreGridGroupBox)
+        mainLayout.addWidget(btn)
+        self.lcm_tab.setLayout(mainLayout)
+        pass
+
+
+    def lcmCoreSwitch(self):
+        self.lcmDesEdit.clear()
+        self.lcmDesEdit2.clear()
+        src = self.lcmScrEdit.toPlainText().split("\n")
+        for line in src:
+            line = line.split(",")
+            cmd = line[0]
+            count = len(line)
+            if cmd.find("0x") != -1:
+                if count >= 0xff:
+                    des = "0x39, 0x00, 0x%02x，0xff" % (count-0xff)
+                elif count >= 3 :
+                    des = "0x39, 0x00, 0x00，0x%02x" % (count)
+                elif count == 2 :
+                    des = "0x23, 0x00, 0x00，0x%02x" % (count)
+                elif count ==1:
+                    des = "0x13, 0x00, 0x00，0x%02x" % (count)
+
+
+                for i in range(0, count):
+                        des += ", %s" % line[i]
+
+                des += ","
+
+                des2=des.replace('0x','')
+                des2=des2.replace(',','')
+
+                self.lcmDesEdit.append(des)
+                self.lcmDesEdit2.append(des2)
+            else:
+                self.lcmDesEdit.append("")
+                self.lcmDesEdit2.append("")
+
+
+
+if __name__ == '__main__':
+    app = QApplication(sys.argv)
+    win = mainui()
+    win.show()
+    sys.exit(app.exec_())
